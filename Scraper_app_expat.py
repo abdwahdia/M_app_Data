@@ -8,13 +8,7 @@ import seaborn as sns
 import numpy as np
 import streamlit as st
 import streamlit.components.v1 as components
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
+
 
 
 
@@ -79,89 +73,113 @@ def local_css(file_name):
 
 # Fonction for web scraping vehicle data
 def load_vehicle_data(mul_page):
+    # create a empty dataframe df
     df = pd.DataFrame()
-    for p in range(1, int(mul_page)): 
-      url = f'https://www.expat-dakar.com/voitures?page={p}'
-      driver = webdriver.Chrome()
-      driver.get(url)
-    
-      try:
-          element = WebDriverWait(driver, 10).until(
-              EC.presence_of_element_located((By.ID, "listings"))
-          )
-      except Exception as e:
-          print(f"An error occurred: {e}")
-          # res = get(url)
-      soup = bs(driver.page_source, 'html.parser')
-      containers = soup.find_all('div', class_ = 'listings-cards__list-item')
-      data = []
-      for container in containers: 
-        try: 
-          inf =container.find('div', class_ = 'listing-card__header__tags').find_all('span')
-          etat = inf[0].text
-          marque = inf[1].text
-          annee = inf[2].text
-          boit_vitess = inf[3].text
-          prix = container.find('span', class_ ='listing-card__price__value 1').text.strip()
-          # adresse = container.find('span', class_ ='listing-card__header__location').text.strip()
-
-          obj = {
-              "etat": etat, 
-              "marque": marque, 
-              "annee": annee,
-              "boit_vitess": boit_vitess, 
-              "prix": prix 
-              # "adresse": adresse
-          }
-          data.append(obj)
-        except: 
-          pass
-
-      DF = pd.DataFrame(data)
-      df = pd.concat([df, DF], axis= 0).reset_index(drop = True)
-    return df
+    # loop over pages indexes
+    for p in range(1, int(mul_page)+1): 
+        url = f'https://dakar-auto.com/senegal/voitures-4?&page={p}'
+        # get the html code of the page using the get function requests
+        res = get(url)
+        # store the html code in a beautifulsoup objet with a html parser (a parser allows to easily navigate through the html code)
+        soup = bs(res.text , 'html.parser')
+        # get all containers that contains the informations of each car
+        containers = soup.find_all('div', class_ = 'listings-cards__list-item mb-md-3 mb-3')
+        # scrape data from all the containers
+        data = []
+        for container in containers: 
+            try:
+                # scrape the car brand, model and the year
+                gen_inf = container.find('h2', class_ ='listing-card__header__title mb-md-2 mb-0').text.strip().split()
+                # get the brand
+                brand = gen_inf[0]
+                # get the model
+                model = ' '.join( gen_inf[1: len(gen_inf) - 1])
+                # get the year
+                year = gen_inf[-1]
+                # Scrape the reference, kilometer driven, fuel type and gearbox type
+                gen_inf2 = container.find_all('li', class_  = 'listing-card__attribute list-inline-item')
+                
+                # get reference
+                reference = gen_inf2[0].text.strip().replace("Ref. ", "")
+                # get kilometer driven
+                kms_driven = gen_inf2[1].text.strip().replace(' km', '')
+                # get gearbox type
+                gearbox = gen_inf2[2].text.strip()
+                # get fuel type
+                fuel_type= gen_inf2[3].text.strip()
+        
+                # scrape the price
+                price = container.find('h3', class_ = 'listing-card__header__price font-weight-bold text-uppercase mb-0').text
+                price = price.strip().replace('\u202f', '').replace(' F CFA', '')
+                dic = {'brand': brand, 
+                      'model': model, 
+                      'year':year, 
+                      'reference': reference, 
+                      'kms_driven':kms_driven, 
+                      'gearbox': gearbox, 
+                      'fuel_type':fuel_type, 
+                      'price':price}
+                data.append(dic)
+            except: 
+                pass
+        
+        DF = pd.DataFrame(data)
+        df= pd.concat([df, DF], axis =0).reset_index(drop = True) 
+      return df   
 
 def load_motocycle_data(mul_page):
-    df = pd.DataFrame()
-    for p in range(1, int(mul_page)): 
-      url = f'https://www.expat-dakar.com/motos-scooters?page={p}'
-      driver = webdriver.Chrome()
-      driver.get(url)
+    # create a empty dataframe df
+    df=pd.DataFrame()
+    # loop over pages indexes
+    for page in range (1,int(mul_page)+1):
+        url=f'https://dakar-auto.com/senegal/motos-and-scooters-3?&page={page}'
+        #get the html code of the page using the get function reauests
+        res=get(url)
+        # store the html code in a beautifulsoup object zith a html panser
+        soup=bs(res.text,'html.parser')
+        # get all containers that contains the informations of each car
+        containers=soup.find_all('div',class_='listing-card__content p-2')
+        data=[]
+        for container in containers:
+            try:
     
-      try:
-          element = WebDriverWait(driver, 10).until(
-              EC.presence_of_element_located((By.ID, "listings"))
-          )
-      except Exception as e:
-          print(f"An error occurred: {e}")
-      soup = bs(driver.page_source, 'html.parser')
-      containers = soup.find_all('div', class_ = 'listings-cards__list-item')
-      data = []
-      for container in containers: 
-        try: 
+                # scrape the moto brand, model and the year
+                gen_inf=container.find ('h2',class_='listing-card__header__title mb-md-2 mb-0').text.strip().split()
+    
+                # get the brand
+                brand=gen_inf[0]
+                # get the model
+                model=' '.join(gen_inf[1:-1])
+    
+                # get the year
+                year=gen_inf[-1]
+    
+                # Scrape the reference, kilometer driven, address and price
+                gen_inf2=container.find_all('li', class_='listing-card__attribute list-inline-item')
+                # get reference
+                reference=gen_inf2[0].text.strip().replace("Ref. ", "")
+                # get kilometer driven
+                kilometers=gen_inf2[1].text.strip().replace(" km", "")
+                # scrape address
+                address=container.find('div',class_='col-12 entry-zone-address').text.strip().replace("\n", "")
+                # scrape the price
+                price=container.find('h3',class_='listing-card__header__price font-weight-bold text-uppercase mb-0').text.strip().replace("\u202f", "").replace(" F CFA", "")
+    
+    
+                dic={'brand': brand,
+                      'model':model,
+                      'year':year,
+                      'reference':reference,
+                      'kms_driven':kilometers,
+                      'address':address,
+                      'price':price}
+    
+                data.append(dic)
+            except:
+                pass
+        DF=pd.DataFrame(data)
+        df=pd.concat([df,DF], axis=0 ).reset_index(drop=True)
 
-          inf =container.find('div', class_ = 'listing-card__header__tags').find_all('span')
-          etat = inf[0].text
-          marque = inf[1].text
-          annee = inf[2].text
-          # boit_vitess = inf[3].text
-          prix = container.find('span', class_ ='listing-card__price__value 1').text.strip()
-          # adresse = container.find('span', class_ ='listing-card__header__location').text.strip()
-
-          obj = {
-              "etat": etat, 
-              "marque": marque, 
-              "annee": annee,
-              # "boit_vitess": boit_vitess
-              "prix": prix
-              # "adresse": adresse
-          }
-          data.append(obj)
-        except: 
-          pass
-
-      DF = pd.DataFrame(data)
-      df = pd.concat([df, DF], axis= 0).reset_index(drop = True)
     return df   
 
 
