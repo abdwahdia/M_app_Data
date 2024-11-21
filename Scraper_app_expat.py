@@ -8,7 +8,15 @@ import seaborn as sns
 import numpy as np
 import streamlit as st
 import streamlit.components.v1 as components
+from selenium import webdriver 
+from selenium.webdriver.common.by import By 
 
+# instantiate a Chrome options object
+options = webdriver.ChromeOptions() 
+# set the options to use Chrome in headless mode (used for running the script in the background)
+options.add_argument("--headless=new") 
+# initialize an instance of the Chrome driver (browser) in headless mode
+driver = webdriver.Chrome(options=options)
 
 
 st.markdown("<h1 style='text-align: center; color: black;'>MY DATA SCRAPER APP</h1>", unsafe_allow_html=True)
@@ -75,8 +83,10 @@ def load_vehicle_data(mul_page):
     df = pd.DataFrame()
     for p in range(1, int(mul_page)): 
       url = f'https://www.expat-dakar.com/voitures?page={p}'
-      res = get(url)
-      soup = bs(res.text, 'html.parser')
+      driver.get(url)
+      res = driver.page_source
+      # res = get(url)
+      soup = bs(res, 'html.parser')
       containers = soup.find_all('div', class_ = 'listings-cards__list-item')
       data = []
       for container in containers: 
@@ -109,8 +119,9 @@ def load_motocycle_data(mul_page):
     df = pd.DataFrame()
     for p in range(1, int(mul_page)): 
       url = f'https://www.expat-dakar.com/motos-scooters?page={p}'
-      res = get(url)
-      soup = bs(res.text, 'html.parser')
+      driver.get(url)
+      res = driver.page_source
+      soup = bs(res, 'html.parser')
       containers = soup.find_all('div', class_ = 'listings-cards__list-item')
       data = []
       for container in containers: 
