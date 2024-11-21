@@ -7,4 +7,4 @@ pandas
 streamlit
 seaborn
 pybase64
-selenium==4.21.0
+
