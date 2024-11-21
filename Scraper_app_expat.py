@@ -8,15 +8,14 @@ import seaborn as sns
 import numpy as np
 import streamlit as st
 import streamlit.components.v1 as components
-from selenium import webdriver 
-from selenium.webdriver.common.by import By 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
 
-# instantiate a Chrome options object
-options = webdriver.ChromeOptions() 
-# set the options to use Chrome in headless mode (used for running the script in the background)
-options.add_argument("--headless=new") 
-# initialize an instance of the Chrome driver (browser) in headless mode
-driver = webdriver.Chrome(options=options)
 
 
 st.markdown("<h1 style='text-align: center; color: black;'>MY DATA SCRAPER APP</h1>", unsafe_allow_html=True)
@@ -83,10 +82,17 @@ def load_vehicle_data(mul_page):
     df = pd.DataFrame()
     for p in range(1, int(mul_page)): 
       url = f'https://www.expat-dakar.com/voitures?page={p}'
+      driver = webdriver.Chrome()
       driver.get(url)
-      res = driver.page_source
-      # res = get(url)
-      soup = bs(res, 'html.parser')
+    
+      try:
+          element = WebDriverWait(driver, 10).until(
+              EC.presence_of_element_located((By.ID, "listings"))
+          )
+      except Exception as e:
+          print(f"An error occurred: {e}")
+          # res = get(url)
+      soup = bs(driver.page_source, 'html.parser')
       containers = soup.find_all('div', class_ = 'listings-cards__list-item')
       data = []
       for container in containers: 
@@ -119,9 +125,16 @@ def load_motocycle_data(mul_page):
     df = pd.DataFrame()
     for p in range(1, int(mul_page)): 
       url = f'https://www.expat-dakar.com/motos-scooters?page={p}'
+      driver = webdriver.Chrome()
       driver.get(url)
-      res = driver.page_source
-      soup = bs(res, 'html.parser')
+    
+      try:
+          element = WebDriverWait(driver, 10).until(
+              EC.presence_of_element_located((By.ID, "listings"))
+          )
+      except Exception as e:
+          print(f"An error occurred: {e}")
+      soup = bs(driver.page_source, 'html.parser')
       containers = soup.find_all('div', class_ = 'listings-cards__list-item')
       data = []
       for container in containers: 
