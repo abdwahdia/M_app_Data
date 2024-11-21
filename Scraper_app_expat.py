@@ -15,10 +15,10 @@ import streamlit.components.v1 as components
 st.markdown("<h1 style='text-align: center; color: black;'>MY DATA SCRAPER APP</h1>", unsafe_allow_html=True)
 
 st.markdown("""
-This app performs webscraping of data from expat-dakar over multiples pages. And we can also
+This app performs webscraping of data from dakar-auto over multiples pages. And we can also
 download scraped data from the app directly without scraping them.
 * **Python libraries:** base64, pandas, streamlit, requests, bs4
-* **Data source:** [Expat-Dakar](https://www.expat-dakar.com/).
+* **Data source:** [Expat-Dakar](https://www.expat-dakar.com/) ** [Dakar-Auto](https://dakar-auto.com/senegal/voitures-4).
 """)
 
 
