@@ -125,7 +125,7 @@ def load_vehicle_data(mul_page):
         
         DF = pd.DataFrame(data)
         df= pd.concat([df, DF], axis =0).reset_index(drop = True) 
-      return df   
+    return df   
 
 def load_motocycle_data(mul_page):
     # create a empty dataframe df
